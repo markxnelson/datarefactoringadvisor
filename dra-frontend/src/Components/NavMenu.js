@@ -8,7 +8,6 @@ import { ImHome } from "react-icons/im";
 const NavMenu = () => {
   const menuItems = [
     { id: 1, name: "Collect SQL Tuning Set", path: "/create-sts" },
-    { id: 4, name: "Upload SQL Tuning Set", path: "/fileupload" },
     { id: 2, name: "Graphs", path: "/graphs" },
     { id: 3, name: "Community", path: "/community" },
   ];
