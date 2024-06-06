@@ -23,6 +23,8 @@ spring.datasource.url=jdbc:oracle:thin:@dbname_dbservicelevel?tns_admin=/Users/m
 spring.datasource.username=ADMIN
 spring.datasource.password=Welcome12345
 spring.datasource.driver-class=oracle.jdbc.driver.OracleDriver
+
+dra.load.sts.sql.file.path=/Users/loacalpath/datarefactoringadvisor/dra-backend/src/main/resources/workload-simulate-queries.sql
 ```
 
 
@@ -37,7 +39,7 @@ Modify local wallet! Edit sqlnet.ora and update DIRECTORY to the wallet
 WALLET_LOCATION = (SOURCE = (METHOD = file) (METHOD_DATA = (DIRECTORY =/Users/myuser/remotedb-wallet ")))SSL_SERVER_DN_MATCH=yes
 ```
 
-
+dra.load.sts.sql.file.path is the local path to a workload simulator SQL file called workload-simulate-queries.sql
 
 ## Run
 ```
