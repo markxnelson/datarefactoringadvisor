@@ -8,7 +8,7 @@ import Error from "./Components/Error";
 import Community from "./Components/Community";
 import ViewGraph from "./Components/ViewGraph";
 import CreateSTS from "./Components/CreateSTS";
-import FileUpload from "./Components/FileUpload";
+// CDD import FileUpload from "./Components/FileUpload";
 
 import RefineCommunity from "./Components/RefineCommunity";
 
@@ -25,7 +25,6 @@ function App() {
             <Route path="viewGraph" element={<ViewGraph />} />
             <Route path="community" element={<Community />} />
             <Route path="refine-community" element={<RefineCommunity />} />
-            <Route path="fileupload" element={<FileUpload />} />
             <Route path="*" element={<Error />} />
           </Route>
         </Routes>

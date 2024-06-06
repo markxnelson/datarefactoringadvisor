@@ -119,7 +119,9 @@ public class CreateSQLTuningSetServiceImpl implements CreateSQLTuningSetService 
 		boolean result = true;
 		try {
 			// Establishing a connection to the database
+			System.out.println("GETTING CONNECTION");
 			connection = DriverManager.getConnection(dbUrlConnectionStr, databaseDetails.getUsername(), databaseDetails.getPassword());
+			System.out.println("GOT CONNECTION");
 			// Creating a CallableStatement for invoking DBMS_SQLTUNE
 			String SQL_STORED_PROC_STS = "CALL DBMS_SQLTUNE.CREATE_SQLSET(sqlset_name => '"+databaseDetails.getSqlSetName()+"')";
 			callableStatement = connection.prepareCall(SQL_STORED_PROC_STS);
@@ -369,7 +371,8 @@ public class CreateSQLTuningSetServiceImpl implements CreateSQLTuningSetService 
 		System.out.println("DB Connection String :: "+dbUrlConnectionStr);
 		System.out.println("Username :: "+ databaseDetails.getUsername());
 		System.out.println("-----------------------------------------------");
-		String getSQLTuningSetListQuery = "SELECT ID, NAME, OWNER FROM DBA_SQLSET_DEFINITIONS WHERE ID > 264";
+		String getSQLTuningSetListQuery = "SELECT ID, NAME, OWNER FROM DBA_SQLSET_DEFINITIONS";
+		// WHERE ID > 264
 		Connection connection = null;
 		List<String> sqlTuningSets = new ArrayList<>();
 		try {
