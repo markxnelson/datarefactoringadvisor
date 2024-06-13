@@ -6,21 +6,12 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 In the project directory, you can run:
 
-## Install the below packages
+## Install Packages and Build
+
+npm install
 
 npx create-react-app dra-frontend
 
-npm install -g@latest
-
-npm install d3
-
-npm install react-responsive-pagination
-
-npm install bootstrap
-
-npm install react-icons
-
-npm install react-router-dom
 
 ### `npm start`
 
