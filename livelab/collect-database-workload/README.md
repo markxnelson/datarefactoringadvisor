@@ -26,7 +26,7 @@ END;
 
 5. The `/` at the end is a terminator that signals the end of the PL/SQL block in Oracle.
 
-After executing this code, a new SQL Tuning Set named `tkdradata` will be created in the database. Initially, it will be empty, but you can populate it with SQL statements and their execution statistics using other procedures from the `DBMS_SQLTUNE` package.
+After executing this code, a new SQL Tuning Set named `MY_SQLTUNE_DATASET_NAME` will be created in the database. Initially, it will be empty, but you can populate it with SQL statements and their execution statistics using other procedures from the `DBMS_SQLTUNE` package.
 
 SQL Tuning Sets are useful for various purposes, such as:
 
