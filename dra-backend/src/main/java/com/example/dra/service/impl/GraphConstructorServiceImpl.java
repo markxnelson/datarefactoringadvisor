@@ -400,12 +400,22 @@ public class GraphConstructorServiceImpl implements GraphConstructorService {
         System.out.println("SQL Tuning Set :: "+ databaseDetails.getSqlSetName());
         System.out.println("-----------------------------------------------");
 
-        String getNodesQuery = "SELECT * FROM "+databaseDetails.getUsername()+".NODES" +
+/*         String getNodesQuery = "SELECT * FROM "+databaseDetails.getUsername()+".NODES" +
                 " WHERE TABLE_SET_NAME = '"+ databaseDetails.getSqlSetName() + "'";
         System.out.println("getNodesQuery :: " + getNodesQuery);
 
         String getEdgesQuery = "SELECT * FROM "+databaseDetails.getUsername()+".EDGES" +
                 " WHERE TABLE_SET_NAME = '"+ databaseDetails.getSqlSetName() + "'";
+        System.out.println("getEdgesQuery :: " + getEdgesQuery);*/
+
+        //*** THERE IS SOME ODD THING GOING ON HERE ADMIN vs TKDRADATA users */
+
+        String getNodesQuery = "SELECT * FROM TKDRADATA.NODES" +
+            " WHERE TABLE_SET_NAME = '"+ databaseDetails.getSqlSetName() + "'";
+        System.out.println("getNodesQuery :: " + getNodesQuery);
+
+        String getEdgesQuery = "SELECT * FROM TKDRADATA.EDGES" +
+            " WHERE TABLE_SET_NAME = '"+ databaseDetails.getSqlSetName() + "'";
         System.out.println("getEdgesQuery :: " + getEdgesQuery);
 
         Connection connection = null;
