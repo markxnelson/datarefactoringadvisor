@@ -45,34 +45,34 @@ These tables are used for identifying frequently joined tables and understanding
 
 2\. In this step, we will populate the `NODES` table, which will become the vertices in our graph. Execute the following commands to populate the table:
 
-    ```sql
-    truncate table nodes;
+```sql
+truncate table nodes;
 
-    insert into nodes (table_set_name, schema, table_name, total_sql, total_executions) 
-    select table_set_name, table_owner, table_name, count(distinct sql_id), sum(executions)
-    from ( 
-        select distinct table_set_name, table_owner, table_name, sql_id, executions 
+insert into nodes (table_set_name, schema, table_name, total_sql, total_executions) 
+select table_set_name, table_owner, table_name, count(distinct sql_id), sum(executions)
+from ( 
+    select distinct table_set_name, table_owner, table_name, sql_id, executions 
+    from (
+        select 'MY_SQLTUNE_DATASET_NAME' table_set_name,
+            case when v.operation='INDEX' then v.TABLE_NAME
+                 when v.operation='TABLE ACCESS' then v.object_name
+                 else NULL end table_name,
+            v.object_owner as table_owner,
+            v.sql_id,
+            v.executions
         from (
-            select 'MY_SQLTUNE_DATASET_NAME' table_set_name,
-                case when v.operation='INDEX' then v.TABLE_NAME
-                     when v.operation='TABLE ACCESS' then v.object_name
-                     else NULL end table_name,
-                v.object_owner as table_owner,
-                v.sql_id,
-                v.executions
-            from (
-                select p.object_name, p.operation, p.object_owner, 
-                    p.sql_id, p.executions, i.table_name
-                from dba_sqlset_plans p, all_indexes i
-                where p.object_name=i.index_name(+) 
-                and sqlset_name='MY_SQLTUNE_DATASET_NAME'
-                and object_owner = upper('USER_NAME')
-            ) v  
-        )
-    ) 
-    group by table_set_name, table_owner, table_name
-    having table_name is not null;
-    ```
+            select p.object_name, p.operation, p.object_owner, 
+                p.sql_id, p.executions, i.table_name
+            from dba_sqlset_plans p, all_indexes i
+            where p.object_name=i.index_name(+) 
+            and sqlset_name='MY_SQLTUNE_DATASET_NAME'
+            and object_owner = upper('USER_NAME')
+        ) v  
+    )
+) 
+group by table_set_name, table_owner, table_name
+having table_name is not null;
+```
 
 In summary, this SQL code populates the `nodes` table with data derived from the `DBA_SQLSET_PLANS` and `ALL_INDEXES` views, specifically for the SQL Tuning Set named `MY_SQLTUNE_DATASET_NAME` and the schema `USER_NAME`. It calculates the total number of distinct SQL statements (`total_sql`) and the total number of executions (`total_executions`) for each table involved in the SQL Tuning Set, and inserts these values into the `nodes` table along with the table set name, schema, and table name.
 
