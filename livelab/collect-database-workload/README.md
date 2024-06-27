@@ -2,7 +2,7 @@
 
 ## CREATE SQL TUNING SET
 
-The provided PL/SQL code is using the `DBMS_SQLTUNE` package in Oracle to create a SQL Tuning Set (STS) named `tkdradata`. A SQL Tuning Set is a database object that contains a set of SQL statements along with their execution statistics and context information.
+The provided PL/SQL code is using the `DBMS_SQLTUNE` package in Oracle to create a SQL Tuning Set (STS) named `MY_SQLTUNE_DATASET_NAME`. A SQL Tuning Set is a database object that contains a set of SQL statements along with their execution statistics and context information.
 
 Create the SQL Tuning Set by running the following in the SQL Console. Past the text in the console worksheet and hit the **Run** button
 
@@ -22,7 +22,7 @@ Here's a breakdown of what the code does:
 
 3. `sqlset_name => 'MY_SQLTUNE_DATASET_NAME'` is a parameter that specifies the name of the SQL Tuning Set to be created. In this case, the name is `MY_SQLTUNE_DATASET_NAME`.
 
-4. `description => 'SQL data from MY_DATABASRE_NAME schema'` is an optional parameter that provides a description for the SQL Tuning Set. Here, the description is "SQL data from tkdradata schema".
+4. `description => 'SQL data from MY_DATABASRE_NAME schema'` is an optional parameter that provides a description for the SQL Tuning Set. 
 
 5. The `/` at the end is a terminator that signals the end of the PL/SQL block in Oracle.
 
@@ -87,7 +87,6 @@ CREATE TABLE Majors (
     DepartmentID NUMBER CONSTRAINT fk_majors_departments REFERENCES Departments(DepartmentID)   
 );
 
-
 -- StudentMajors Table
 CREATE TABLE StudentMajors (
     StudentMajorID INT PRIMARY KEY,
@@ -95,20 +94,20 @@ CREATE TABLE StudentMajors (
     MajorID NUMBER CONSTRAINT fk_studentmajors_majors REFERENCES Majors(MajorID)
 );
 
--- Courses Table
 CREATE TABLE Courses (
     CourseID NUMBER PRIMARY KEY,
     CourseName VARCHAR2(100) NOT NULL,
     CourseDescription CLOB,
     Credits NUMBER NOT NULL,
+    Room VARCHAR2(50),
+    CourseTime VARCHAR2(20),
     DepartmentID NUMBER CONSTRAINT fk_courses_departments REFERENCES Departments(DepartmentID)
 );
 
--- Enrollments Table
-CREATE TABLE Enrollments (
-    EnrollmentID INT PRIMARY KEY,
-    StudentID NUMBER CONSTRAINT fk_enrollments_students REFERENCES Students(StudentID),
-    CourseID NUMBER CONSTRAINT fk_enrollments_courses REFERENCES Courses(CourseID),
+-- StudentCourses Table
+CREATE TABLE StudentCourses (
+    StudentID NUMBER CONSTRAINT fk_studentcourses_students REFERENCES Students(StudentID),
+    CourseID NUMBER CONSTRAINT fk_studentcourses_courses REFERENCES Courses(CourseID),
     SemesterYear VARCHAR(10) NOT NULL,
     Grade VARCHAR(5)
 );
@@ -136,14 +135,14 @@ CREATE TABLE StudentFinances (
 And create the Faculty And Staff Schema by running the following in the SQL Console
 
 ```
--- Roles Table
+-- Employee Roles
 CREATE TABLE Roles (
     RoleID NUMBER PRIMARY KEY,
     RoleName VARCHAR2(50) NOT NULL,
     RoleDescription VARCHAR2(200)
 );
 
--- Faculty Table
+-- Faculty
 CREATE TABLE Faculty (
     FacultyID NUMBER PRIMARY KEY,
     FirstName VARCHAR2(50) NOT NULL,
@@ -155,7 +154,7 @@ CREATE TABLE Faculty (
     RoleID NUMBER REFERENCES Roles(RoleID)
 );
 
--- Staff Table
+-- Staff
 CREATE TABLE Staff (
     StaffID NUMBER PRIMARY KEY,
     FirstName VARCHAR2(50) NOT NULL,
@@ -167,7 +166,8 @@ CREATE TABLE Staff (
     RoleID NUMBER REFERENCES Roles(RoleID)
 );
 
--- FacultyCourses Table
+
+-- Courses for Faculty Member
 CREATE TABLE FacultyCourses (
     FacultyCourseID NUMBER PRIMARY KEY,
     FacultyID NUMBER REFERENCES Faculty(FacultyID),
@@ -175,7 +175,7 @@ CREATE TABLE FacultyCourses (
     SemesterYear VARCHAR2(10) NOT NULL
 );
 
--- Publications Table
+-- Faculty Publications
 CREATE TABLE Publications (
     PublicationID NUMBER PRIMARY KEY,
     PublicationTitle VARCHAR2(200) NOT NULL,
@@ -184,14 +184,14 @@ CREATE TABLE Publications (
     FacultyID NUMBER REFERENCES Faculty(FacultyID)
 );
 
--- Committees Table
+-- Faculty Committees
 CREATE TABLE Committees (
     CommitteeID NUMBER PRIMARY KEY,
     CommitteeName VARCHAR2(100) NOT NULL,
     CommitteeDescription CLOB
 );
 
--- CommitteeMembers Table
+-- Committee Members
 CREATE TABLE CommitteeMembers (
     CommitteeMemberID NUMBER PRIMARY KEY,
     CommitteeID NUMBER REFERENCES Committees(CommitteeID),
@@ -201,7 +201,7 @@ CREATE TABLE CommitteeMembers (
 );
 
 
--- FacultyCredentials Table
+-- Faculty Credentials
 CREATE TABLE FacultyCredentials (
     CredentialID NUMBER PRIMARY KEY,
     FacultyID NUMBER REFERENCES Faculty(FacultyID),
@@ -210,7 +210,7 @@ CREATE TABLE FacultyCredentials (
     YearAwarded NUMBER NOT NULL
 );
 
--- EmployeeBenefits Table
+-- Employee Benefits
 CREATE TABLE EmployeeBenefits (
     BenefitID NUMBER PRIMARY KEY,
     BenefitName VARCHAR2(100) NOT NULL,
@@ -222,22 +222,20 @@ CREATE TABLE EmployeeBenefits (
     FacultyID NUMBER REFERENCES Faculty(FacultyID),    StaffID NUMBER REFERENCES Staff(StaffID),
     CONSTRAINT BenefitCurrency CHECK (BenefitCurrency IN ('USD', 'EUR', 'GBP', 'JPY'))
 );
-
-
 ```
 
 And run the queries
 
 ```
--- STUDENT QUERIES
-
+-- STUDENT COURSE LIST
 BEGIN
   FOR i IN 1..100 LOOP 
-    EXECUTE IMMEDIATE 'SELECT s.FirstName, s.LastName, c.CourseName, d.DepartmentName, e.Grade
-                       FROM Students s
-                       JOIN Enrollments e ON s.StudentID = e.StudentID
-                       JOIN Courses c ON e.CourseID = c.CourseID
-                       JOIN Departments d ON c.DepartmentID = d.DepartmentID';
+    EXECUTE IMMEDIATE 'SELECT s.StudentID, s.FirstName, s.LastName, c.CourseID, c.CourseName, c.CourseDescription, c.Credits, c.Room, c.CourseTime, sc.SemesterYear, sc.Grade
+    FROM Students s
+    JOIN StudentCourses sc ON s.StudentID = sc.StudentID
+    JOIN Courses c ON sc.CourseID = c.CourseID
+    WHERE s.StudentID = 1
+    ORDER BY sc.SemesterYear, c.CourseName';
   END LOOP;
 END;
 /
@@ -255,21 +253,10 @@ BEGIN
 END;
 /
 
--- STUDENT ENROLLMENTS
-BEGIN
-  FOR i IN 1..10 LOOP 
-    EXECUTE IMMEDIATE 'SELECT s.StudentID, s.FirstName, s.LastName, e.CourseID, e.SemesterYear, sm.MajorID
-                       FROM Students s
-                       JOIN Enrollments e ON s.StudentID = e.StudentID
-                       JOIN StudentMajors sm ON s.StudentID = sm.StudentID';
-  END LOOP;
-END;
-/
 
-
--- STUDENT COURSES
+-- ALL STUDENT COURSES
 BEGIN
-  FOR i IN 1..10 LOOP
+  FOR i IN 1..100 LOOP
     EXECUTE IMMEDIATE 'SELECT s.FirstName, s.LastName, c.CollegeName, d.DepartmentName, m.MajorName, co.CourseName
                         FROM Students s
                         JOIN StudentMajors sm ON s.StudentID = sm.StudentID
@@ -279,12 +266,70 @@ BEGIN
                         JOIN Courses co ON d.DepartmentID = co.DepartmentID';
   END LOOP;
 END;
+/
 
--- FACULTY QUERIES
+-- STUDENT MAJORS
+BEGIN
+  FOR i IN 1..100 LOOP 
+    EXECUTE IMMEDIATE 'SELECT s.StudentID, s.FirstName, s.LastName, m.MajorName, d.DepartmentName, c.CollegeName
+FROM 
+    Students s
+    JOIN StudentMajors sm ON s.StudentID = sm.StudentID
+    JOIN Majors m ON sm.MajorID = m.MajorID
+    JOIN Departments d ON m.DepartmentID = d.DepartmentID
+    JOIN Colleges c ON d.CollegeID = c.CollegeID
+WHERE 
+    s.StudentID = 1001
+ORDER BY 
+    m.MajorName';
+  END LOOP;
+END;
+/
+
+
+-- STUDENT TRANSCRIPTS
+BEGIN
+  FOR i IN 1..100 LOOP 
+    EXECUTE IMMEDIATE 'SELECT s.StudentID, s.FirstName, s.LastName, t.TranscriptID, t.TranscriptDate, t.GPA
+    FROM 
+        Students s
+        JOIN Transcripts t ON s.StudentID = t.StudentID
+    WHERE 
+        s.StudentID = 10
+    ORDER BY 
+        t.TranscriptDate DESC';
+  END LOOP;
+END;
+/
+
+-- STUDENT FINANCES
+BEGIN
+  FOR i IN 1..100 LOOP 
+    EXECUTE IMMEDIATE 
+'SELECT 
+    s.StudentID,
+    s.FirstName,
+    s.LastName,
+    sf.StudentFinanceID,
+    sf.TuitionFee,
+    sf.RoomFee,
+    sf.MealPlan,
+    sf.OtherFees,
+    sf.FinancialAidAmount,
+    (sf.TuitionFee + COALESCE(sf.RoomFee, 0) + COALESCE(sf.MealPlan, 0) + COALESCE(sf.OtherFees, 0)) AS TotalFees,
+    (sf.TuitionFee + COALESCE(sf.RoomFee, 0) + COALESCE(sf.MealPlan, 0) + COALESCE(sf.OtherFees, 0) - COALESCE(sf.FinancialAidAmount, 0)) AS NetAmount
+FROM 
+    Students s
+    JOIN StudentFinances sf ON s.StudentID = sf.StudentID
+WHERE 
+    s.StudentID = 3';
+  END LOOP;
+END;
+/   
 
 -- All Roles for a faculty member
 BEGIN
-  FOR i IN 1..10 LOOP 
+  FOR i IN 1..100 LOOP
     EXECUTE IMMEDIATE 'SELECT f.FirstName, f.LastName, r.RoleName
                         FROM Faculty f
                         JOIN Roles r ON f.RoleID = r.RoleID
@@ -292,10 +337,9 @@ BEGIN
   END LOOP;
 END;
 /
-
 -- All Roles for a Staff Member
 BEGIN
-  FOR i IN 1..10 LOOP 
+  FOR i IN 1..100 LOOP 
     EXECUTE IMMEDIATE 'SELECT s.FirstName, s.LastName, r.RoleName
                         FROM Staff s
                         JOIN Roles r ON s.RoleID = r.RoleID
@@ -304,9 +348,10 @@ BEGIN
 END;
 /
 
+
 -- All Employee Benefits for a Staff Member
 BEGIN
-  FOR i IN 1..10 LOOP 
+  FOR i IN 1..100 LOOP
     EXECUTE IMMEDIATE 'SELECT s.FirstName, s.LastName, eb.BenefitName, eb.BenefitDescription, eb.BenefitCost, eb.BenefitCurrency
                         FROM Staff s
                         JOIN EmployeeBenefits eb ON s.StaffID = eb.StaffID
@@ -317,7 +362,7 @@ END;
 
 -- All Employee Benefits for a Faculty Member
 BEGIN
-  FOR i IN 1..10 LOOP 
+  FOR i IN 1..100 LOOP
     EXECUTE IMMEDIATE 'SELECT f.FirstName, f.LastName, eb.BenefitName, eb.BenefitDescription, eb.BenefitCost, eb.BenefitCurrency
                         FROM Faculty f
                         JOIN EmployeeBenefits eb ON f.FacultyID = eb.FacultyID
@@ -328,7 +373,7 @@ END;
 
 -- Committees and Committee Members for a Faculty Member
 BEGIN
-  FOR i IN 1..10 LOOP 
+  FOR i IN 1..100 LOOP
     EXECUTE IMMEDIATE 'SELECT c.CommitteeName, LISTAGG(f.FirstName) WITHIN GROUP (ORDER BY f.LastName) AS CommitteeMembers
                         FROM Committees c
                         JOIN CommitteeMembers cm ON c.CommitteeID = cm.CommitteeID
@@ -342,7 +387,7 @@ END;
 
 -- Courses for a Faculty Member
 BEGIN
-  FOR i IN 1..10 LOOP
+  FOR i IN 1..100 LOOP
     EXECUTE IMMEDIATE 'SELECT f.FirstName, f.LastName, c.CourseName, c.CourseDescription, c.Credits
                         FROM Faculty f
                         JOIN FacultyCourses fc ON f.FacultyID = fc.FacultyID
@@ -352,9 +397,9 @@ BEGIN
 END;
 /
 
-Publications for a Faculty Member
+-- Publications for a Faculty Member
 BEGIN
-  FOR i IN 1..10 LOOP
+  FOR i IN 1..100 LOOP 
     EXECUTE IMMEDIATE 'SELECT f.FirstName, f.LastName, p.PublicationTitle, p.PublicationType, p.PublicationDate, fc.Degree, fc.Institution, fc.YearAwarded
                         FROM Faculty f
                         JOIN Publications p ON f.FacultyID = p.FacultyID
@@ -363,7 +408,6 @@ BEGIN
   END LOOP;
 END;
 /
-
 ```
 
 Once these queries have completed, Login as ADMIN and populate the tuning set
@@ -387,9 +431,9 @@ BEGIN
             NULL, NULL, NULL, NULL, 1, NULL,
           'ALL', 'NO_RECURSIVE_SQL')) P;
 
-      DBMS_SQLTUNE.LOAD_SQLSET(sqlset_name => 'college-sql-snapshot1',
+      DBMS_SQLTUNE.LOAD_SQLSET(sqlset_name => 'MY_SQLTUNE_DATASET_NAME',
                           populate_cursor => cur,
-                          sqlset_owner => 'college');      
+                          sqlset_owner => 'USER_NAME');      
 END;
 ```
 
@@ -399,29 +443,22 @@ Here's a breakdown of what the code does:
 3. `OPEN cur FOR` opens the cursor `cur` and assigns the result of the following query to it.
 4. `SELECT VALUE(P) FROM table(...)` is a way to unnest the collection returned by the `DBMS_SQLTUNE.SELECT_CURSOR_CACHE` function.
 5. `DBMS_SQLTUNE.SELECT_CURSOR_CACHE` is a function that retrieves SQL statements from the cursor cache based on the specified filters.
-   - `'parsing_schema_name=upper(''USER_NAME'') and sql_text not like ''%OPT_DYN%'''` is a filter condition that selects SQL statements from the cursor cache where the parsing schema name is 'TKDRADATA' (case-insensitive) and the SQL text does not contain the string 'OPT_DYN'.
+   - `'parsing_schema_name=upper(''USER_NAME'') and sql_text not like ''%OPT_DYN%'''` is a filter condition that selects SQL statements from the cursor cache where the parsing schema name is 'USER_NAME' (case-insensitive) and the SQL text does not contain the string 'OPT_DYN'.
    - The remaining parameters (`NULL, NULL, NULL, NULL, 1, NULL`) are placeholders for other optional filters.
    - `'ALL'` specifies that all SQL statements matching the filters should be returned.
    - `'NO_RECURSIVE_SQL'` specifies that recursive SQL statements should be excluded.
 
 Load the SQL Tuning Set by running the following in the SQL Console. Past the text in the console worksheet and hit the **Run** button
 
-```sql
-  DBMS_SQLTUNE.LOAD_SQLSET(sqlset_name => 'MY_SQLTUNE_DATASET_NAME',
-                          populate_cursor => cur,
-                          sqlset_owner => 'USER_NAME');      
-END;
-```
-
 6. `DBMS_SQLTUNE.LOAD_SQLSET` is a procedure that loads SQL statements into a SQL Tuning Set.
    - `sqlset_name => 'MY_SQLTUNE_DATASET_NAME'` specifies the name of the SQL Tuning Set to be populated.
    - `populate_cursor => cur` specifies the cursor variable `cur` that contains the SQL statements to be loaded into the tuning set.
-   - `sqlset_owner => 'USER_NAME'` specifies the owner of the SQL Tuning Set, which is 'TKDRADATA' in this case.
+   - `sqlset_owner => 'USER_NAME'` specifies the owner of the SQL Tuning Set
 
 So, the overall effect of this PL/SQL code is to:
 
-1. Retrieve SQL statements from the cursor cache where the parsing schema is 'TKDRADATA' and the SQL text does not contain 'OPT_DYN'.
-2. Load those SQL statements into a SQL Tuning Set named `tkdradata` owned by the `tkdradata` schema.
+1. Retrieve SQL statements from the cursor cache where the parsing schema is 'USER_NAME' and the SQL text does not contain 'OPT_DYN'.
+2. Load those SQL statements into a SQL Tuning Set named `MY_SQLTUNE_DATASET_NAME` owned by the `USER_NAME` schema.
 
 This process can be useful for capturing and analyzing SQL statements that are currently executing or have recently executed in the database. By loading these statements into a SQL Tuning Set, you can perform further analysis, tuning, or testing on them using the various features and procedures provided by the `DBMS_SQLTUNE` package.
 

@@ -7,3 +7,5 @@ Descriptive Blurb
 [Collect Database Workload](./collect-database-workload/README.md)
 
 [Create Graph Tables](./create-graph-tables/README.md)
+
+[Create Graph with Graph Studio](./create-graph/README.md)

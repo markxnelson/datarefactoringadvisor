@@ -9,8 +9,8 @@ In this task, we will create a set of metadata tables that we will use to store 
 1. Create the graph metadata tables by running the following statements - make sure you run these from `YOUR` login SQL Worksheet (not the `ADMIN` user's worksheet):
 
     ```sql
-    drop table nodes;
     drop table edges;
+    drop table nodes;
 
     create table nodes 
     ( table_set_name       varchar2(128)
